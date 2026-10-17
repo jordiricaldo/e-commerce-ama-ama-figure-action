@@ -8,6 +8,7 @@
     "api": "tsx backend/src/server.ts",
     "db:setup": "tsx backend/src/setup-db.ts",
     "db:migrate-json": "tsx backend/src/migrate-json-to-postgres.ts",
+    "db:repair-frieren-image": "tsx backend/src/repair-frieren-image.ts",
     "dev:full": "node scripts/dev-full.mjs",
     "build": "vite build",
     "preview": "vite preview",

@@ -120,7 +120,7 @@ const verifiedProductImages: Record<string, string> = {
   'rengoku-scale': 'https://img.amiami.com/images/product/main/222/FIGURE-138273.jpg',
   'bocchi-scale': 'https://img.amiami.com/images/product/main/234/FIGURE-162713.jpg',
   'yor-scale': 'https://img.amiami.com/images/product/main/223/FIGURE-144828.jpg',
-  'frieren-nendoroid': 'https://img.amiami.com/images/product/main/253/FIGURE-201709.jpg',
+  'frieren-nendoroid': 'https://img.amiami.com/images/product/main/262/FIGURE-201709.jpg',
   'himmel-nendoroid': 'https://img.amiami.com/images/product/main/242/FIGURE-171364.jpg',
   'marin-nendoroid': 'https://img.amiami.com/images/product/main/263/FIGURE-205608.jpg',
   'gojo-nendoroid': 'https://img.amiami.com/images/product/main/262/FIGURE-202256.jpg',

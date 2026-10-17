@@ -37,6 +37,7 @@ const load = (): DatabaseFile => {
 const data = load();
 
 const imageMigrations: Record<string, string> = {
+  'prod-extra-frieren-nendoroid': 'https://img.amiami.com/images/product/main/262/FIGURE-201709.jpg',
   'prod-vtuber-kobo-merch': '/product-images/kobo_kanaeru_merch.svg',
   'prod-hg-wing-zero': 'https://img.amiami.com/images/product/main/204/TOY-GDM-5200.jpg',
   'prod-mg-barbatos': 'https://img.amiami.com/images/product/main/193/TOY-GDM-4393.jpg',

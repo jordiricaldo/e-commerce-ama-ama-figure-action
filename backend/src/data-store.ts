@@ -25,6 +25,8 @@ export const getSessionUser = async (token: string): Promise<AuthUser | undefine
 
 export const listProducts = async (filters: ProductFilters = {}): Promise<Product[]> =>
   isPostgresEnabled() ? postgres.listProducts(filters) : (await loadJsonStore()).listProducts(filters);
+export const getProduct = async (id: string): Promise<Product | undefined> =>
+  isPostgresEnabled() ? postgres.getProduct(id) : (await loadJsonStore()).getProduct(id);
 export const createProduct = async (product: Product): Promise<Product> =>
   isPostgresEnabled() ? postgres.createProduct(product) : (await loadJsonStore()).createProduct(product);
 export const updateProduct = async (id: string, changes: Partial<Product>): Promise<Product | undefined> =>

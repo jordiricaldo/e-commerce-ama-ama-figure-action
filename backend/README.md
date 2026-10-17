@@ -54,4 +54,17 @@ Frontend dan API berjalan dalam satu proyek Vercel; database memakai Neon Free. 
 6. Di **Settings → Environment Variables**, tambahkan `DATABASE_URL` dengan connection string Neon yang sama. Jangan beri prefix `VITE_` pada variabel rahasia database. `VITE_API_URL` tidak perlu diatur karena frontend memakai `/api` pada domain yang sama.
 7. Deploy/redeploy. Setelah berhasil, coba buka `/api/health`, login admin memakai password baru, lalu cek katalog dan order.
 
+Jika foto Nendoroid Frieren tidak muncul setelah deploy, URL lama sudah tidak tersedia. Dengan fungsi `Read-SecretText` yang dibuat pada langkah migrasi, jalankan perbaikan khusus ini:
+
+```powershell
+try {
+  $env:DATABASE_URL = Read-SecretText "Neon pooled connection string"
+  npm run db:repair-frieren-image
+} finally {
+  Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+}
+```
+
+Perintah tersebut hanya mengganti URL foto Nendoroid Frieren; stok, harga, pesanan, dan akun tetap.
+
 Vercel Function memakai Express dari `api/[...path].ts`, sedangkan foto katalog disajikan dari `public/product-images`. Tabel dan session dibuat otomatis saat request pertama. Jangan pernah commit atau membagikan connection string maupun password admin.
