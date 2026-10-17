@@ -5,6 +5,9 @@ import { ProductFilters } from './postgres-db.js';
 export const isPostgresEnabled = () => Boolean(process.env.DATABASE_URL);
 const loadJsonStore = async () => import('./json-db.js');
 export const initializeDatabase = async () => {
+  if (process.env.VERCEL && !isPostgresEnabled()) {
+    throw new Error('DATABASE_URL wajib diatur pada Environment Variables Vercel.');
+  }
   if (isPostgresEnabled()) await postgres.initializePostgres();
 };
 

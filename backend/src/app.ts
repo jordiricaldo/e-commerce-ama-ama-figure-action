@@ -31,6 +31,11 @@ app.use('/api/orders', orderRoutes);
 app.use((_req, res) => res.status(404).json({ message: 'Endpoint tidak ditemukan.' }));
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('API request failed:', error);
+  const message = error instanceof Error ? error.message : '';
+  if (message === 'DATABASE_URL wajib diatur pada Environment Variables Vercel.') {
+    res.status(503).json({ message });
+    return;
+  }
   res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
 });
 
