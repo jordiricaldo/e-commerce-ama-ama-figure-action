@@ -16,6 +16,7 @@ export interface Product {
   originalPrice?: number;
   downPayment?: number; // For Pre-Orders
   image: string;
+  images?: string[];
   rating: number;
   soldCount: number;
   stock: number;
@@ -58,4 +59,42 @@ export interface CartItem {
   product: Product;
   quantity: number;
   isPreOrderPaymentType?: 'full' | 'dp';
+}
+
+export type OrderStatus = 'processing' | 'shipped' | 'delivered';
+
+export interface OrderItem {
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  quantity: number;
+  unitPrice: number;
+  paymentType: 'full' | 'dp';
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  items: OrderItem[];
+  subtotal: number;
+  discount: number;
+  shippingFee: number;
+  grandTotal: number;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+  trackingNumber?: string;
+  notes?: string;
+}
+
+export interface RegisteredUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user';
 }

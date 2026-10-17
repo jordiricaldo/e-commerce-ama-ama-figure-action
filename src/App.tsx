@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
 import { VouchersSection } from './components/VouchersSection';
@@ -11,14 +11,20 @@ import { CartDrawer } from './components/CartDrawer';
 import { WishlistDrawer } from './components/WishlistDrawer';
 import { Footer } from './components/Footer';
 import { WhatsAppFloatingButton } from './components/WhatsAppFloatingButton';
+import { AdminDashboard } from './components/AdminDashboard';
+import { LoginModal } from './components/LoginModal';
+import { RegisterModal } from './components/RegisterModal';
+import { UserOrdersModal } from './components/UserOrdersModal';
 import { PRODUCTS } from './data/products';
 import { STORE_VOUCHERS } from './data/vouchers';
 import { Product, CartItem, Voucher, HobbyCategory } from './types';
 import { Sparkles, ShoppingBag, CheckCircle, PackageOpen } from 'lucide-react';
+import { createProduct, deleteProduct, getProducts, getSession, updateProduct, logout } from './services/api';
 
 export default function App() {
   // Products & Vouchers
-  const [products] = useState<Product[]>(PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+  const [session, setSession] = useState(getSession());
   const [vouchers] = useState<Voucher[]>(STORE_VOUCHERS);
   const [claimedVoucherIds, setClaimedVoucherIds] = useState<string[]>(['v-50k']);
 
@@ -36,6 +42,16 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(() => getSession()?.user.role === 'admin');
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
+  const [loginRole, setLoginRole] = useState<'admin' | 'user' | null>(() => window.location.pathname === '/admin-panel' ? 'admin' : null);
+
+  useEffect(() => {
+    const handleOpenRegister = () => setIsRegisterOpen(true);
+    window.addEventListener('open-register', handleOpenRegister);
+    return () => window.removeEventListener('open-register', handleOpenRegister);
+  }, []);
 
   // Toast notifications
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -43,6 +59,52 @@ export default function App() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  const refreshProducts = async () => {
+    try {
+      setProducts(await getProducts());
+    } catch {
+      showToast('API belum aktif, menampilkan katalog lokal.');
+    }
+  };
+
+  useEffect(() => {
+    const handleFocus = () => { void refreshProducts(); };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refreshProducts();
+    };
+    void refreshProducts();
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Add Product (Admin Action)
+  const handleAddProduct = async (newProduct: Product) => {
+    try {
+      const created = await createProduct(newProduct);
+      setProducts(prev => [created, ...prev]);
+    } catch { showToast('Produk gagal ditambahkan ke backend.'); }
+  };
+
+  // Update Product (Admin Action)
+  const handleUpdateProduct = async (updatedProduct: Product) => {
+    try {
+      const updated = await updateProduct(updatedProduct);
+      setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
+    } catch { showToast('Produk gagal diperbarui di backend.'); }
+  };
+
+  // Delete Product (Admin Action)
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteProduct(productId);
+      setProducts(prev => prev.filter(p => p.id !== productId));
+    } catch { showToast('Produk gagal dihapus dari backend.'); }
   };
 
   // Cart Actions
@@ -174,32 +236,57 @@ export default function App() {
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
+  if (isAdminOpen && session?.user.role === 'admin') {
+    return (
+      <AdminDashboard
+        products={products}
+        onAddProduct={handleAddProduct}
+        onUpdateProduct={handleUpdateProduct}
+        onDeleteProduct={handleDeleteProduct}
+        onBackToStore={() => setIsAdminOpen(false)}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#12121A] text-slate-100 flex flex-col selection:bg-[#FF2A6D] selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-orange-500 selection:text-slate-900 relative">
+      {/* Animated Pop Background */}
+      <div className="fixed inset-0 bg-anime-pattern opacity-90 pointer-events-none z-0" />
+      
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#222234] border border-[#05D9E8]/50 text-white text-xs sm:text-sm font-bold py-2.5 px-4 rounded-xl shadow-2xl shadow-cyan-500/20 flex items-center gap-2 animate-bounce">
-          <Sparkles className="w-4 h-4 text-[#05D9E8]" />
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white border border-[#05D9E8]/50 text-slate-900 text-xs sm:text-sm font-bold py-2.5 px-4 rounded-xl shadow-2xl shadow-blue-500/10 flex items-center gap-2 animate-bounce">
+          <Sparkles className="w-4 h-4 text-blue-600" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Top Header & Search */}
-      <Header
-        cartCount={totalCartCount}
-        wishlistCount={wishlistIds.length}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenWishlist={() => setIsWishlistOpen(true)}
-        onResetSearch={() => {
-          setSearchQuery('');
-          setActiveMainTab('all');
-          setActiveHobbyCategory('all');
-        }}
-      />
+      <div className="relative z-50">
+        <Header
+          cartCount={totalCartCount}
+          wishlistCount={wishlistIds.length}
+          searchQuery={searchQuery}
+          user={session?.user || null}
+          onSearchChange={setSearchQuery}
+          onOpenCart={() => setIsCartOpen(true)}
+          onOpenWishlist={() => setIsWishlistOpen(true)}
+          onOpenLogin={() => setLoginRole('user')}
+          onOpenOrders={() => setIsOrdersOpen(true)}
+          onLogout={() => {
+            logout();
+            setSession(null);
+            showToast('Berhasil keluar dari akun.');
+          }}
+          onResetSearch={() => {
+            setSearchQuery('');
+            setActiveMainTab('all');
+            setActiveHobbyCategory('all');
+          }}
+        />
+      </div>
 
-      <main className="flex-1 pb-12">
+      <main className="flex-1 pb-12 relative z-10">
         {/* Store Hero Banner Carousel (Shown on main product views) */}
         {activeMainTab !== 'categories_view' && !searchQuery && (
           <HeroBanner
@@ -214,6 +301,12 @@ export default function App() {
             onSelectScaleFilter={() => {
               setActiveMainTab('all');
               setActiveHobbyCategory('scale');
+            }}
+            onSelectHobbyCategory={(category) => {
+              setSearchQuery('');
+              setActiveMainTab('all');
+              setActiveHobbyCategory(category);
+              window.scrollTo({ top: 380, behavior: 'smooth' });
             }}
           />
         )}
@@ -243,13 +336,13 @@ export default function App() {
           <div className="max-w-6xl mx-auto">
             {/* Search active notice banner */}
             {searchQuery && (
-              <div className="px-3 sm:px-4 pt-3 flex items-center justify-between text-xs bg-slate-900/60 p-2.5 mx-3 sm:mx-4 mt-2 rounded-xl border border-slate-800">
-                <span className="text-slate-300">
-                  Hasil pencarian untuk: <strong className="text-[#05D9E8]">"{searchQuery}"</strong>
+              <div className="px-3 sm:px-4 pt-3 flex items-center justify-between text-xs bg-slate-100/60 p-2.5 mx-3 sm:mx-4 mt-2 rounded-xl border border-slate-200">
+                <span className="text-slate-600">
+                  Hasil pencarian untuk: <strong className="text-blue-600">"{searchQuery}"</strong>
                 </span>
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="text-[#FF2A6D] font-bold hover:underline"
+                  className="text-orange-600 font-bold hover:underline"
                 >
                   Reset Filter
                 </button>
@@ -266,12 +359,12 @@ export default function App() {
             {/* 2-Column Product Grid (Main Shopping Area) */}
             <div className="px-3 sm:px-4 py-2">
               {filteredProducts.length === 0 ? (
-                <div className="py-16 text-center bg-[#1A1A26] rounded-2xl border border-slate-800 p-6 my-4">
+                <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-6 my-4">
                   <PackageOpen className="w-12 h-12 mx-auto mb-3 text-slate-500 opacity-40" />
-                  <h3 className="text-base font-bold text-white font-['Poppins']">
+                  <h3 className="text-base font-bold text-slate-900 font-['Poppins']">
                     Tidak ada figure yang cocok dengan kriteria filter
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                     Coba ubah kata kunci pencarian atau ganti kategori hobi di bilah navigasi.
                   </p>
                   <button
@@ -280,7 +373,7 @@ export default function App() {
                       setActiveMainTab('all');
                       setActiveHobbyCategory('all');
                     }}
-                    className="mt-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs"
+                    className="mt-4 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-700 text-blue-700 font-bold text-xs"
                   >
                     Tampilkan Semua Produk
                   </button>
@@ -323,6 +416,9 @@ export default function App() {
         onRemoveItem={handleRemoveFromCart}
         onClearCart={handleClearCart}
         claimedVouchers={claimedVouchers}
+        isAuthenticated={session?.user.role === 'user'}
+        onRequireLogin={() => setLoginRole('user')}
+        onOrderCreated={refreshProducts}
       />
 
       {/* Wishlist Drawer */}
@@ -340,6 +436,34 @@ export default function App() {
 
       {/* Footer & Trust Badges */}
       <Footer />
+
+      <LoginModal
+        role={loginRole}
+        onClose={() => setLoginRole(null)}
+        onSuccess={() => {
+          const nextSession = getSession();
+          setSession(nextSession);
+          if (nextSession?.user.role === 'admin') setIsAdminOpen(true);
+        }}
+      />
+
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        onSuccess={() => {
+          const nextSession = getSession();
+          setSession(nextSession);
+        }}
+        onSwitchToLogin={() => {
+          setIsRegisterOpen(false);
+          setLoginRole('user');
+        }}
+      />
+
+      <UserOrdersModal 
+        isOpen={isOrdersOpen}
+        onClose={() => setIsOrdersOpen(false)}
+      />
     </div>
   );
 }

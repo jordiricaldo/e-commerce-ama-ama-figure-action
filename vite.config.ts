@@ -4,6 +4,8 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const apiPort = process.env.VITE_API_PORT || process.env.API_PORT || '4000';
+
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -12,6 +14,10 @@ export default defineConfig(() => {
       },
     },
     server: {
+      proxy: {
+        '/api': `http://localhost:${apiPort}`,
+        '/product-images': `http://localhost:${apiPort}`,
+      },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',

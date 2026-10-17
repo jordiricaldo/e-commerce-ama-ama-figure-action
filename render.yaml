@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ama-ama-api
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev
+    startCommand: npm run api
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

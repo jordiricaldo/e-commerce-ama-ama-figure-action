@@ -128,3 +128,49 @@
     @apply font-sans;
     }
 }
+
+.bg-anime-pattern {
+  background-image:
+    radial-gradient(circle, rgba(255, 75, 125, 0.42) 1.5px, transparent 1.8px),
+    radial-gradient(circle, rgba(13, 148, 136, 0.34) 1.4px, transparent 1.8px),
+    repeating-linear-gradient(135deg, transparent 0 28px, rgba(37, 99, 235, 0.055) 29px 30px, transparent 31px 58px),
+    linear-gradient(135deg, #fffafd, #f2fbfc 54%, #fffdf5);
+  background-size: 26px 26px, 26px 26px, 100% 100%, 100% 100%;
+  background-position: 0 0, 13px 13px, 0 0, 0 0;
+  animation: move-bg 36s linear infinite;
+}
+
+@keyframes move-bg {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 26px 26px, 39px 39px, 0 0, 0 0;
+  }
+}
+
+@keyframes hero-copy-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-image-enter {
+  from { transform: scale(1.05); filter: saturate(0.75); }
+  to { transform: scale(1); filter: saturate(1); }
+}
+
+.animate-hero-copy {
+  animation: hero-copy-enter 450ms ease-out both;
+}
+
+.animate-hero-image {
+  animation: hero-image-enter 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-anime-pattern,
+  .animate-hero-copy,
+  .animate-hero-image {
+    animation: none;
+  }
+}
